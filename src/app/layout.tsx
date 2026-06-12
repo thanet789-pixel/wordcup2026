@@ -36,13 +36,17 @@ export const metadata: Metadata = {
   },
 };
 
+import { AuthProvider } from "@/context/AuthContext";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="th" className="dark">
       <body className={`${kanit.variable} ${prompt.variable} font-body`}>
-        <Sidebar />
-        <main className="min-h-screen pb-20 md:ml-64 md:pb-0">{children}</main>
-        <BottomNav />
+        <AuthProvider>
+          <Sidebar />
+          <main className="min-h-screen pb-20 md:ml-64 md:pb-0">{children}</main>
+          <BottomNav />
+        </AuthProvider>
       </body>
     </html>
   );

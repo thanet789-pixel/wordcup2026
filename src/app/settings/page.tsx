@@ -2,24 +2,28 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Bell, Globe, Moon, Star, RefreshCw } from "lucide-react";
+import Link from "next/link";
+import { Bell, Globe, Moon, Star, RefreshCw, Users, LogIn, LogOut } from "lucide-react";
 import { PageTransition } from "@/components/PageTransition";
 import { Switch } from "@/components/ui/switch";
 import { teams } from "@/data/mock";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
 
 export default function SettingsPage() {
   const [darkMode, setDarkMode] = useState(true);
   const [notifications, setNotifications] = useState(true);
   const [goalAlerts, setGoalAlerts] = useState(true);
-  const [language, setLanguage] = useState("en");
+  const [language, setLanguage] = useState("th");
   const [favoriteTeam, setFavoriteTeam] = useState("bra");
 
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [firebaseStatus, setFirebaseStatus] = useState("กำลังตรวจสอบการเชื่อมต่อ...");
+
+  const { user, isAdmin, favorites, loginWithGoogle, logout, loading } = useAuth();
 
   useEffect(() => {
     if (!db) {
@@ -41,7 +45,6 @@ export default function SettingsPage() {
     }
     checkConnection();
   }, []);
-
 
   const handleSync = async () => {
     setSyncing(true);
@@ -69,6 +72,83 @@ export default function SettingsPage() {
         <p className="mt-1 text-sm text-white/50">Customize your experience</p>
 
         <div className="mt-8 space-y-6">
+          {/* User Profile Section */}
+          <section className="glass-card p-4">
+            <h2 className="flex items-center gap-2 font-heading text-lg text-white">
+              <Users className="h-5 w-5 text-neon" /> โปรไฟล์ผู้ใช้งาน
+            </h2>
+            <div className="mt-4">
+              {loading ? (
+                <div className="h-20 w-full animate-pulse rounded bg-white/5" />
+              ) : user ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 rounded-lg border border-glass-border bg-navy-light/40 p-4">
+                    <div className="relative h-12 w-12 overflow-hidden rounded-full border border-white/20">
+                      <Image
+                        src={user.photoURL || "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=120&h=120&fit=crop"}
+                        alt={user.displayName || "Avatar"}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-base font-semibold text-white">{user.displayName || "แฟนบอล"}</p>
+                      <p className="text-xs text-white/50">{user.email || ""}</p>
+                      <div className="mt-1 flex items-center gap-1.5">
+                        <span className="rounded bg-neon/10 px-2 py-0.5 text-[10px] font-medium text-neon">
+                          {isAdmin ? "ผู้ดูแลระบบ" : "สมาชิก"}
+                        </span>
+                        {isAdmin && (
+                          <Link href="/admin" className="rounded bg-gold/10 px-2 py-0.5 text-[10px] font-medium text-gold hover:bg-gold hover:text-navy transition-all">
+                            ไปที่หน้าแอดมิน
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Favorite Teams */}
+                  <div>
+                    <h3 className="text-xs font-semibold text-white/70 uppercase tracking-wider">ทีมชาติที่คุณกดติดตาม ⭐</h3>
+                    {favorites.length > 0 ? (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {favorites.map((favId) => {
+                          const t = teams.find((team) => team.id === favId);
+                          if (!t) return null;
+                          return (
+                            <div key={favId} className="flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs text-gold">
+                              <span className="text-base">{t.flag}</span>
+                              <span>{t.name}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-xs text-white/40">ยังไม่ได้กดติดตามทีมชาติใดๆ สามารถไปกดติดตามได้ที่หน้า &quot;รายชื่อทีม&quot;</p>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={logout}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 py-2.5 text-sm font-semibold text-red-400 transition-all hover:bg-red-500 hover:text-white"
+                  >
+                    <LogOut className="h-4 w-4" /> ออกจากระบบ
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-sm text-white/60 mb-4">เข้าสู่ระบบเพื่อกดติดตามข่าวสารแมตช์ของทีมโปรด และร่วมทายผลชิงรางวัล</p>
+                  <button
+                    onClick={loginWithGoogle}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-neon/30 bg-neon/10 py-3 text-sm font-semibold text-neon transition-all hover:bg-neon hover:text-navy hover:shadow-[0_0_12px_rgba(34,197,94,0.4)]"
+                  >
+                    <LogIn className="h-4 w-4" /> เข้าสู่ระบบด้วย Google
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+
           {/* Data Synchronization */}
           <section className="glass-card p-4">
             <h2 className="flex items-center gap-2 font-heading text-lg text-white">
