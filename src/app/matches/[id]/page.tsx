@@ -10,15 +10,36 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const match = getMatch(id);
-  if (!match) return { title: "Match Not Found" };
+  if (!match) return { title: "ไม่พบข้อมูลแมตช์" };
   const home = getTeam(match.homeTeamId)!;
   const away = getTeam(match.awayTeamId)!;
+  
+  const titleStr = `วิเคราะห์สด: ${home.name} พบ ${away.name} (กลุ่ม ${match.group})`;
+  const descStr = `ศูนย์ข้อมูลการแข่งขันสดและร่วมทายผลบอลคู่ระหว่าง ${home.name} พบ ${away.name} แข่งขันกันที่สนาม ${match.stadium} เมือง ${match.city}`;
+  const ogImageUrl = "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1200&h=630&fit=crop";
+
   return {
-    title: `${home.name} vs ${away.name}`,
-    description: `Live match center for ${home.name} vs ${away.name} at ${match.stadium}`,
+    title: titleStr,
+    description: descStr,
     openGraph: {
-      title: `${home.name} vs ${away.name} | World Cup 2026`,
-      description: `Match at ${match.stadium}, ${match.city}`,
+      title: `${titleStr} | ฟุตบอลโลก 2026`,
+      description: descStr,
+      type: "article",
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: `${home.name} vs ${away.name}`,
+        }
+      ],
+      siteName: "ศูนย์ฟุตบอลโลก 2026",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${titleStr} | ฟุตบอลโลก 2026`,
+      description: descStr,
+      images: [ogImageUrl],
     },
   };
 }

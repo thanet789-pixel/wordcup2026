@@ -10,10 +10,34 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const team = getTeam(id);
-  if (!team) return { title: "Team Not Found" };
+  if (!team) return { title: "ไม่พบข้อมูลทีมชาติ" };
+  
+  const titleStr = `ทีมชาติ${team.name} (กลุ่มตัวแทน)`;
+  const descStr = `ส่องทำเนียบรายชื่อนักเตะชุดลุยศึกฟุตบอลโลก 2026 ข้อมูลความพร้อม และอันดับฟีฟ่าล่าสุดของทัพ ${team.name} (FIFA Ranking #${team.ranking})`;
+
   return {
     title: team.name,
-    description: `${team.name} - FIFA Ranking #${team.ranking}. World Cup 2026 team profile.`,
+    description: descStr,
+    openGraph: {
+      title: `${titleStr} | ฟุตบอลโลก 2026`,
+      description: descStr,
+      type: "profile",
+      images: [
+        {
+          url: team.flag,
+          width: 320,
+          height: 240,
+          alt: `ธงชาติ ${team.name}`,
+        }
+      ],
+      siteName: "ศูนย์ฟุตบอลโลก 2026",
+    },
+    twitter: {
+      card: "summary",
+      title: `${titleStr} | ฟุตบอลโลก 2026`,
+      description: descStr,
+      images: [team.flag],
+    },
   };
 }
 
