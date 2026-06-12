@@ -6,7 +6,7 @@ import { MatchCard } from "@/components/MatchCard";
 import { matches, Match } from "@/data/mock";
 import { formatDate, cn, isSameDayBangkok } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 const groups = ["ทั้งหมด", "สด", "วันนี้", "กลุ่ม A", "กลุ่ม B", "กลุ่ม C"];
@@ -18,20 +18,20 @@ export default function MatchesPage() {
 
   useEffect(() => {
     setTodayDate(new Date());
-    async function fetchMatches() {
-      try {
-        const snap = await getDocs(collection(db, "matches"));
-        const list: Match[] = [];
-        snap.forEach((doc) => list.push(doc.data() as Match));
-        if (list.length > 0) {
-          list.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-          setMatchesState(list);
-        }
-      } catch (err) {
-        console.error("Error fetching matches from Firestore:", err);
+    
+    // Real-time matches listener
+    const unsub = onSnapshot(collection(db, "matches"), (snap) => {
+      const list: Match[] = [];
+      snap.forEach((doc) => list.push(doc.data() as Match));
+      if (list.length > 0) {
+        list.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        setMatchesState(list);
       }
-    }
-    fetchMatches();
+    }, (err) => {
+      console.error("Error listening to matches from Firestore:", err);
+    });
+
+    return () => unsub();
   }, []);
 
   const filtered = matchesState.filter((m) => {

@@ -22,7 +22,7 @@ import {
 } from "@/data/mock";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatMatchTime, isSameDayBangkok } from "@/lib/utils";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 export default function HomePage() {
@@ -36,36 +36,47 @@ export default function HomePage() {
     // Trigger background sync loop on server-side
     fetch("/api/sync").catch((e) => console.error("Initial background sync trigger error:", e));
 
-    async function fetchData() {
-      try {
-        const matchesSnap = await getDocs(collection(db, "matches"));
-        const matchesList: Match[] = [];
-        matchesSnap.forEach((doc) => matchesList.push(doc.data() as Match));
-        if (matchesList.length > 0) {
-          matchesList.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-          setMatchesState(matchesList);
-        }
-
-        const standingsSnap = await getDocs(collection(db, "standings"));
-        const standingsMap: Record<string, StandingRow[]> = {};
-        standingsSnap.forEach((doc) => {
-          standingsMap[doc.id] = doc.data().rows as StandingRow[];
-        });
-        if (Object.keys(standingsMap).length > 0) {
-          setStandingsState(standingsMap);
-        }
-
-        const newsSnap = await getDocs(collection(db, "news"));
-        const newsList: NewsItem[] = [];
-        newsSnap.forEach((doc) => newsList.push(doc.data() as NewsItem));
-        if (newsList.length > 0) {
-          setNewsState(newsList);
-        }
-      } catch (err) {
-        console.error("Error fetching Firestore data:", err);
+    // 1. Real-time matches listener
+    const unsubMatches = onSnapshot(collection(db, "matches"), (snap) => {
+      const matchesList: Match[] = [];
+      snap.forEach((doc) => matchesList.push(doc.data() as Match));
+      if (matchesList.length > 0) {
+        matchesList.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        setMatchesState(matchesList);
       }
-    }
-    fetchData();
+    }, (err) => {
+      console.error("Error listening to matches:", err);
+    });
+
+    // 2. Real-time standings listener
+    const unsubStandings = onSnapshot(collection(db, "standings"), (snap) => {
+      const standingsMap: Record<string, StandingRow[]> = {};
+      snap.forEach((doc) => {
+        standingsMap[doc.id] = doc.data().rows as StandingRow[];
+      });
+      if (Object.keys(standingsMap).length > 0) {
+        setStandingsState(standingsMap);
+      }
+    }, (err) => {
+      console.error("Error listening to standings:", err);
+    });
+
+    // 3. Real-time news listener
+    const unsubNews = onSnapshot(collection(db, "news"), (snap) => {
+      const newsList: NewsItem[] = [];
+      snap.forEach((doc) => newsList.push(doc.data() as NewsItem));
+      if (newsList.length > 0) {
+        setNewsState(newsList);
+      }
+    }, (err) => {
+      console.error("Error listening to news:", err);
+    });
+
+    return () => {
+      unsubMatches();
+      unsubStandings();
+      unsubNews();
+    };
   }, []);
 
   const getFeaturedMatch = (): Match => {
