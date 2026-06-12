@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase";
 import { doc, writeBatch, collection, getDocs } from "firebase/firestore";
+import { standings as mockStandings } from "@/data/mock";
 
 let isSyncLoopStarted = false;
 
@@ -52,6 +53,7 @@ async function performSync() {
 
   let updatedMatchesCount = 0;
   const apiMatches = matchesData.matches || [];
+  const finalMatches: any[] = [];
 
   for (const apiMatch of apiMatches) {
     if (!apiMatch.homeTeam?.tla || !apiMatch.awayTeam?.tla) continue;
@@ -82,46 +84,107 @@ async function performSync() {
           : null;
 
       const matchRef = doc(db, "matches", matchDoc.id);
+      
+      const updatedMatch = {
+        ...matchDoc,
+        homeScore,
+        awayScore,
+        status,
+        date: apiMatch.utcDate,
+      };
+      
       batch.update(matchRef, {
         homeScore,
         awayScore,
         status,
         date: apiMatch.utcDate,
       });
+      
+      finalMatches.push(updatedMatch);
       updatedMatchesCount++;
     }
   }
 
-  // 4. Map and update standings in Firestore
-  const apiStandings = standingsData.standings || [];
-  for (const groupStanding of apiStandings) {
-    if (groupStanding.stage !== "GROUP_STAGE") continue;
+  // Add any matches from Firestore that were not present or updated by the API
+  for (const fm of firestoreMatches) {
+    if (!finalMatches.some(m => m.id === fm.id)) {
+      finalMatches.push(fm);
+    }
+  }
 
-    const apiGroup = groupStanding.group; // e.g. "GROUP_A"
-    if (!apiGroup) continue;
+  // 4. Calculate standings dynamically based on final matches list
+  const standingsMap: Record<string, any[]> = {};
+  for (const [groupName, rows] of Object.entries(mockStandings)) {
+    standingsMap[groupName] = rows.map(row => ({
+      teamId: row.teamId,
+      played: 0,
+      won: 0,
+      drawn: 0,
+      lost: 0,
+      gf: 0,
+      ga: 0,
+      points: 0,
+      status: row.status || "active"
+    }));
+  }
 
-    const parts = apiGroup.split("_");
-    const letter = parts[1]; // e.g. "A"
-    if (!letter) continue;
+  for (const match of finalMatches) {
+    const groupName = match.group;
+    if (!groupName || !standingsMap[groupName]) continue;
 
-    const thaiGroupName = `กลุ่ม ${letter}`;
+    const status = match.status?.toLowerCase();
+    if (status !== "finished") continue;
 
-    const tableRows = groupStanding.table || [];
-    const rows = tableRows.map((row: any) => {
-      const teamCode = row.team.tla.toLowerCase();
-      return {
-        teamId: teamCode,
-        played: row.playedGames,
-        won: row.won,
-        drawn: row.draw,
-        lost: row.lost,
-        gf: row.goalsFor,
-        ga: row.goalsAgainst,
-        points: row.points,
-        status: "active",
-      };
+    const homeId = match.homeTeamId;
+    const awayId = match.awayTeamId;
+
+    const homeScore = parseInt(match.homeScore as any, 10);
+    const awayScore = parseInt(match.awayScore as any, 10);
+
+    if (isNaN(homeScore) || isNaN(awayScore)) continue;
+
+    const homeRow = standingsMap[groupName].find(r => r.teamId === homeId);
+    const awayRow = standingsMap[groupName].find(r => r.teamId === awayId);
+
+    if (homeRow && awayRow) {
+      homeRow.played += 1;
+      awayRow.played += 1;
+      homeRow.gf += homeScore;
+      homeRow.ga += awayScore;
+      awayRow.gf += awayScore;
+      awayRow.ga += homeScore;
+
+      if (homeScore > awayScore) {
+        homeRow.won += 1;
+        homeRow.points += 3;
+        awayRow.lost += 1;
+      } else if (homeScore < awayScore) {
+        awayRow.won += 1;
+        awayRow.points += 3;
+        homeRow.lost += 1;
+      } else {
+        homeRow.drawn += 1;
+        homeRow.points += 1;
+        awayRow.drawn += 1;
+        awayRow.points += 1;
+      }
+    }
+  }
+
+  // Sort standings rows within each group
+  for (const groupName of Object.keys(standingsMap)) {
+    standingsMap[groupName].sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      const gdA = a.gf - a.ga;
+      const gdB = b.gf - b.ga;
+      if (gdB !== gdA) return gdB - gdA;
+      if (b.gf !== a.gf) return b.gf - a.gf;
+      return a.teamId.localeCompare(b.teamId);
     });
+  }
 
+  // Write calculated standings to Firestore
+  for (const [thaiGroupName, rows] of Object.entries(standingsMap)) {
     const standingRef = doc(db, "standings", thaiGroupName);
     batch.set(standingRef, { rows });
   }
