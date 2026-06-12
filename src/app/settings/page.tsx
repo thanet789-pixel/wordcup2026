@@ -22,8 +22,27 @@ export default function SettingsPage() {
   const [syncResult, setSyncResult] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [firebaseStatus, setFirebaseStatus] = useState("กำลังตรวจสอบการเชื่อมต่อ...");
+  const [notificationPermission, setNotificationPermission] = useState<string>("default");
 
   const { user, isAdmin, favorites, loginWithGoogle, logout, loading } = useAuth();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setNotificationPermission(Notification.permission);
+      
+      // Register service worker Safely
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("/firebase-messaging-sw.js")
+          .then((reg) => {
+            console.log("Service Worker registered successfully for PWA push alerts:", reg);
+          })
+          .catch((err) => {
+            console.error("Service worker registration failed:", err);
+          });
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (!db) {
@@ -62,6 +81,54 @@ export default function SettingsPage() {
       setSyncError("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์เพื่อซิงก์ข้อมูลได้");
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const handleToggleNotifications = async (checked: boolean) => {
+    setNotifications(checked);
+    if (checked && typeof window !== "undefined") {
+      try {
+        const permission = await Notification.requestPermission();
+        setNotificationPermission(permission);
+        if (permission === "granted") {
+          alert("🎉 คุณได้เปิดใช้งานสิทธิ์การแจ้งเตือนสดบอลโลกสำเร็จแล้ว!");
+        } else if (permission === "denied") {
+          alert("⚠️ คุณได้ปิดกั้นการแจ้งเตือน โปรดเปิดสิทธิ์ในตั้งค่าเบราว์เซอร์ของคุณ");
+        }
+      } catch (err) {
+        console.error("Failed to request permission:", err);
+      }
+    }
+  };
+
+  const handleToggleGoalAlerts = async (checked: boolean) => {
+    setGoalAlerts(checked);
+    if (checked && typeof window !== "undefined" && Notification.permission !== "granted") {
+      try {
+        const permission = await Notification.requestPermission();
+        setNotificationPermission(permission);
+      } catch (err) {
+        console.error("Failed to request permission:", err);
+      }
+    }
+  };
+
+  const triggerLocalNotification = () => {
+    if (typeof window !== "undefined" && Notification.permission === "granted") {
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.ready.then((registration) => {
+          registration.showNotification("อัปเดตประตูสดฟุตบอลโลก! ⚽", {
+            body: "บราซิล 1 - 0 เยอรมนี (นาทีที่ 78' เนย์มาร์ ปั่นฟรีคิกโค้งเสียบมุมอย่างสุดสวย!)",
+            icon: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=192&h=192&fit=crop",
+            vibrate: [200, 100, 200],
+            data: {
+              url: "/live/m1"
+            }
+          } as any);
+        });
+      }
+    } else {
+      alert("กรุณาเปิดการแจ้งเตือนก่อนทำการทดลองส่งข้อมูลจำลอง");
     }
   };
 
@@ -202,23 +269,53 @@ export default function SettingsPage() {
           {/* Notifications */}
           <section className="glass-card p-4">
             <h2 className="flex items-center gap-2 font-heading text-lg text-white">
-              <Bell className="h-5 w-5 text-gold" /> Notifications
+              <Bell className="h-5 w-5 text-gold" /> การแจ้งเตือนด่วน (Web Push Notifications)
             </h2>
             <div className="mt-4 space-y-4">
+              <div className="rounded border border-glass-border bg-navy-light/40 p-3 text-xs text-white/60">
+                <p>สถานะสิทธิ์การแจ้งเตือนของเบราว์เซอร์: 
+                  <span className={`ml-1 font-bold ${
+                    notificationPermission === "granted" 
+                      ? "text-emerald-400" 
+                      : notificationPermission === "denied" 
+                        ? "text-red-400" 
+                        : "text-gold"
+                  }`}>
+                    {notificationPermission === "granted" 
+                      ? "อนุญาตแล้ว (Granted)" 
+                      : notificationPermission === "denied" 
+                        ? "ปฏิเสธ/ปิดกั้น (Denied)" 
+                        : "ยังไม่ได้ระบุสิทธิ์ (Default)"}
+                  </span>
+                </p>
+              </div>
+
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-white">Push Notifications</p>
-                  <p className="text-xs text-white/40">Match start & final score alerts</p>
+                  <p className="text-sm text-white">เปิดรับข่าวสารและการแข่งขัน</p>
+                  <p className="text-xs text-white/40">แจ้งเตือนข่าวสารใหม่และโปรแกรมบอลเปิดสนาม</p>
                 </div>
-                <Switch checked={notifications} onCheckedChange={setNotifications} />
+                <Switch checked={notifications} onCheckedChange={handleToggleNotifications} />
               </div>
+
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-white">Goal Alerts</p>
-                  <p className="text-xs text-white/40">Instant goal notifications</p>
+                  <p className="text-sm text-white">แจ้งเตือนประตูได้/เสียทันที (Goal Alerts)</p>
+                  <p className="text-xs text-white/40">สั่นเตือนเมื่อมีการทำประตูในสนามแข่งขันสด</p>
                 </div>
-                <Switch checked={goalAlerts} onCheckedChange={setGoalAlerts} />
+                <Switch checked={goalAlerts} onCheckedChange={handleToggleGoalAlerts} />
               </div>
+
+              {notificationPermission === "granted" && (
+                <div className="pt-2 border-t border-glass-border/30">
+                  <button
+                    onClick={triggerLocalNotification}
+                    className="w-full rounded bg-gold/15 border border-gold/30 hover:bg-gold hover:text-navy px-4 py-2.5 text-xs font-bold text-gold transition-all"
+                  >
+                    🔔 ทดลองส่งการแจ้งเตือนสดจำลอง (Test Push Alert)
+                  </button>
+                </div>
+              )}
             </div>
           </section>
 
