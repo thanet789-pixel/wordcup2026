@@ -21,6 +21,10 @@ export default function NewsPage() {
   const [newsState, setNewsState] = useState<NewsItem[]>(mockNews);
 
   useEffect(() => {
+    if (!db) {
+      console.warn("Firebase Firestore is not initialized. Please configure environment variables.");
+      return;
+    }
     const unsubNews = onSnapshot(
       collection(db, "news"),
       (snap) => {

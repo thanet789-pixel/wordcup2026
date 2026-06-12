@@ -22,9 +22,8 @@ export default function SettingsPage() {
   const [firebaseStatus, setFirebaseStatus] = useState("กำลังตรวจสอบการเชื่อมต่อ...");
 
   useEffect(() => {
-    const hasKeys = !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
-    if (!hasKeys) {
-      setFirebaseStatus("❌ ไม่พบ Firebase API Key (กรุณาเช็ก Environment Variables บน Vercel)");
+    if (!db) {
+      setFirebaseStatus("❌ ไม่พบการตั้งค่า Firebase (กรุณาเช็ก Environment Variables บน Vercel หรือดึงค่าผ่าน vercel env pull)");
       return;
     }
 

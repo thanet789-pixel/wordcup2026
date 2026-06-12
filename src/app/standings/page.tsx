@@ -12,6 +12,10 @@ export default function StandingsPage() {
   const [standingsState, setStandingsState] = useState<Record<string, StandingRow[]>>(standings);
 
   useEffect(() => {
+    if (!db) {
+      console.warn("Firebase Firestore is not initialized. Please configure environment variables.");
+      return;
+    }
     async function fetchStandings() {
       try {
         const snap = await getDocs(collection(db, "standings"));

@@ -36,6 +36,11 @@ export default function HomePage() {
     // Trigger background sync loop on server-side
     fetch("/api/sync").catch((e) => console.error("Initial background sync trigger error:", e));
 
+    if (!db) {
+      console.warn("Firebase Firestore is not initialized. Please configure environment variables.");
+      return;
+    }
+
     // 1. Real-time matches listener
     const unsubMatches = onSnapshot(collection(db, "matches"), (snap) => {
       const matchesList: Match[] = [];

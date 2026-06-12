@@ -18,6 +18,10 @@ export default function TeamsPage() {
   const [teamsState, setTeamsState] = useState<Team[]>(teams);
 
   useEffect(() => {
+    if (!db) {
+      console.warn("Firebase Firestore is not initialized. Please configure environment variables.");
+      return;
+    }
     async function fetchTeams() {
       try {
         const snap = await getDocs(collection(db, "teams"));

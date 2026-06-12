@@ -19,6 +19,11 @@ export default function MatchesPage() {
   useEffect(() => {
     setTodayDate(new Date());
     
+    if (!db) {
+      console.warn("Firebase Firestore is not initialized. Please configure environment variables.");
+      return;
+    }
+    
     // Real-time matches listener
     const unsub = onSnapshot(collection(db, "matches"), (snap) => {
       const list: Match[] = [];

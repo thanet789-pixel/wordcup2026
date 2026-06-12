@@ -23,6 +23,10 @@ export default function LiveMatchClient({ match: initialMatch }: { match: Match 
   const stats = match.stats;
 
   useEffect(() => {
+    if (!db) {
+      console.warn("Firebase Firestore is not initialized. Please configure environment variables.");
+      return;
+    }
     // 1. Listen to Match score and stats updates
     const matchDocRef = doc(db, "matches", initialMatch.id);
     const unsubMatch = onSnapshot(matchDocRef, (docSnap) => {
