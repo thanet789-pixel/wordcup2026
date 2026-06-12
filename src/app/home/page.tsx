@@ -68,9 +68,88 @@ export default function HomePage() {
     fetchData();
   }, []);
 
-  const heroMatch = matchesState[0] || matches[0];
-  const home = getTeam(heroMatch.homeTeamId)!;
-  const away = getTeam(heroMatch.awayTeamId)!;
+  const getFeaturedMatch = (): Match => {
+    const live = matchesState.find(
+      (m) => m.status?.toLowerCase() === "live" || m.status?.toLowerCase() === "halftime"
+    );
+    if (live) return live;
+
+    const scheduled = matchesState
+      .filter((m) => m.status?.toLowerCase() === "scheduled")
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    if (scheduled.length > 0) return scheduled[0];
+
+    const finished = matchesState
+      .filter((m) => m.status?.toLowerCase() === "finished")
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    if (finished.length > 0) return finished[0];
+
+    return matchesState[0] || matches[0];
+  };
+
+  const heroMatch = getFeaturedMatch();
+  const home = getTeam(heroMatch.homeTeamId) || { name: heroMatch.homeTeamId, flag: "https://flagcdn.com/w320/un.png", ranking: 100 };
+  const away = getTeam(heroMatch.awayTeamId) || { name: heroMatch.awayTeamId, flag: "https://flagcdn.com/w320/un.png", ranking: 100 };
+
+  const getHeroLabel = (match: Match) => {
+    if (match.status?.toLowerCase() === "live" || match.status?.toLowerCase() === "halftime") {
+      return "กำลังแข่งขันสด (LIVE)";
+    }
+    if (match.status?.toLowerCase() === "finished") {
+      return "จบการแข่งขันแล้ว";
+    }
+    if (match.id === "m1") {
+      return "การแข่งขันนัดเปิดสนาม";
+    }
+    return "ไฮไลท์แมตช์ถัดไป";
+  };
+
+  const getAiPrediction = (match: Match) => {
+    if (match.id === "m1") {
+      return aiPrediction;
+    }
+    const homeTeam = getTeam(match.homeTeamId);
+    const awayTeam = getTeam(match.awayTeamId);
+    if (!homeTeam || !awayTeam) {
+      return { winner: "ไม่ระบุ", score: "0-0", confidence: 50 };
+    }
+
+    const rankDiff = homeTeam.ranking - awayTeam.ranking;
+    let winner = "เสมอ";
+    let score = "1-1";
+    let confidence = 50;
+
+    if (rankDiff < -10) {
+      winner = homeTeam.name;
+      score = rankDiff < -30 ? "3-0" : "2-0";
+      confidence = Math.min(85, 60 + Math.abs(rankDiff) * 0.5);
+    } else if (rankDiff < 0) {
+      winner = homeTeam.name;
+      score = "2-1";
+      confidence = Math.min(70, 55 + Math.abs(rankDiff));
+    } else if (rankDiff > 10) {
+      winner = awayTeam.name;
+      score = rankDiff > 30 ? "0-3" : "0-2";
+      confidence = Math.min(85, 60 + Math.abs(rankDiff) * 0.5);
+    } else if (rankDiff > 0) {
+      winner = awayTeam.name;
+      score = "1-2";
+      confidence = Math.min(70, 55 + Math.abs(rankDiff));
+    } else {
+      winner = "เสมอ";
+      score = "1-1";
+      confidence = 50;
+    }
+
+    return {
+      winner,
+      score,
+      confidence: Math.round(confidence),
+    };
+  };
+
+  const currentPrediction = getAiPrediction(heroMatch);
+
   const liveMatches = matchesState.filter((m) => m.status?.toLowerCase() === "live");
   const todayMatches = matchesState.filter((m) => {
     if (!todayDate) return false;
@@ -90,10 +169,11 @@ export default function HomePage() {
         >
           <div className="absolute inset-0">
             <Image
-              src="/hero_match_banner.png"
+              src="/stadium_hero_bg.png"
               alt="Hero"
               fill
-              className="object-cover"
+              className="object-cover animate-pulse-live"
+              style={{ animationDuration: "10s" }}
               priority
             />
             <div className="absolute inset-0 bg-hero-gradient" />
@@ -101,7 +181,13 @@ export default function HomePage() {
           </div>
 
           <div className="relative z-10 p-6 md:p-10">
-            <p className="text-xs uppercase tracking-widest text-neon">การแข่งขันนัดเปิดสนาม</p>
+            <p className={`text-xs uppercase tracking-widest font-semibold ${
+              (heroMatch.status === "live" || heroMatch.status === "halftime") 
+                ? "text-live animate-pulse" 
+                : "text-neon"
+            }`}>
+              {getHeroLabel(heroMatch)}
+            </p>
             <div className="mt-4 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
               <div>
                 <div className="flex items-center gap-4">
@@ -119,7 +205,33 @@ export default function HomePage() {
                   เริ่มการแข่งขัน: {formatDate(heroMatch.date)} เวลา {formatMatchTime(heroMatch.date)} (เวลาประเทศไทย)
                 </p>
               </div>
-              <CountdownTimer targetDate={heroMatch.date} />
+
+              {/* Show Live/Finished score or CountdownTimer */}
+              {(heroMatch.status === "live" || heroMatch.status === "halftime") ? (
+                <div className="flex flex-col items-center justify-center rounded-card bg-live/15 px-6 py-4 border border-live/30 shadow-live animate-pulse">
+                  <span className="text-xs uppercase tracking-widest text-live font-bold">กำลังแข่งสด</span>
+                  <span className="font-heading text-4xl md:text-6xl text-white mt-1">
+                    {heroMatch.homeScore} - {heroMatch.awayScore}
+                  </span>
+                  {heroMatch.minute && (
+                    <span className="text-xs font-semibold text-neon mt-1 animate-pulse">
+                      นาทีที่ {heroMatch.minute}&apos;
+                    </span>
+                  )}
+                </div>
+              ) : heroMatch.status === "finished" ? (
+                <div className="flex flex-col items-center justify-center rounded-card bg-white/5 px-6 py-4 border border-white/10">
+                  <span className="text-xs uppercase tracking-widest text-white/50">จบการแข่งขัน</span>
+                  <span className="font-heading text-4xl md:text-6xl text-white mt-1">
+                    {heroMatch.homeScore} - {heroMatch.awayScore}
+                  </span>
+                  <span className="text-xs font-semibold text-emerald-400 mt-1">
+                    FT
+                  </span>
+                </div>
+              ) : (
+                <CountdownTimer targetDate={heroMatch.date} />
+              )}
             </div>
             <div className="mt-6 flex gap-3">
               <Button asChild variant="default">
@@ -143,15 +255,15 @@ export default function HomePage() {
           <div className="mt-4 grid gap-4 md:grid-cols-3">
             <div>
               <p className="text-xs text-white/40">ทำนายผู้ชนะ</p>
-              <p className="font-heading text-2xl text-gold">{aiPrediction.winner}</p>
+              <p className="font-heading text-2xl text-gold">{currentPrediction.winner}</p>
             </div>
             <div>
               <p className="text-xs text-white/40">ทำนายสกอร์</p>
-              <p className="font-heading text-2xl text-neon">{aiPrediction.score}</p>
+              <p className="font-heading text-2xl text-neon">{currentPrediction.score}</p>
             </div>
             <div>
               <p className="text-xs text-white/40">ความมั่นใจ</p>
-              <p className="font-heading text-2xl text-white">{aiPrediction.confidence}%</p>
+              <p className="font-heading text-2xl text-white">{currentPrediction.confidence}%</p>
             </div>
           </div>
         </section>
