@@ -166,7 +166,9 @@ async function scorePredictions() {
           
           const userRef = doc(db, "users", uid);
           batch.update(userRef, {
-            totalPoints: increment(pointsEarned)
+            totalPoints: increment(pointsEarned),
+            totalPredictions: increment(1),
+            correctPredictions: increment(isCorrect ? 1 : 0)
           });
           
           batchCount += 2;

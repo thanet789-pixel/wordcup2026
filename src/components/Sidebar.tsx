@@ -25,7 +25,7 @@ const navItems = [
   { href: "/home", label: "หน้าแรก", icon: Home },
   { href: "/matches", label: "ตารางการแข่งขัน", icon: Calendar },
   { href: "/standings", label: "ตารางคะแนน", icon: Trophy },
-  { href: "/leaderboard", label: "อันดับทายผล", icon: Award },
+  { href: "/leaderboard", label: "เกมทายผล & อันดับ", icon: Award },
   { href: "/teams", label: "รายชื่อทีม", icon: Users },
   { href: "/live/m1", label: "ถ่ายทอดสด", icon: Radio },
   { href: "/news", label: "ข่าวสาร", icon: Newspaper },

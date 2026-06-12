@@ -94,10 +94,13 @@ export default function SettingsPage() {
                     <div>
                       <p className="text-base font-semibold text-white">{user.displayName || "แฟนบอล"}</p>
                       <p className="text-xs text-white/50">{user.email || ""}</p>
-                      <div className="mt-1 flex items-center gap-1.5">
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
                         <span className="rounded bg-neon/10 px-2 py-0.5 text-[10px] font-medium text-neon">
                           {isAdmin ? "ผู้ดูแลระบบ" : "สมาชิก"}
                         </span>
+                        <Link href="/leaderboard" className="rounded bg-purple-500/20 px-2 py-0.5 text-[10px] font-medium text-purple-300 hover:bg-purple-500 hover:text-white transition-all">
+                          🏆 ดูอันดับทายผลบอล
+                        </Link>
                         {isAdmin && (
                           <Link href="/admin" className="rounded bg-gold/10 px-2 py-0.5 text-[10px] font-medium text-gold hover:bg-gold hover:text-navy transition-all">
                             ไปที่หน้าแอดมิน
