@@ -12,12 +12,15 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-const db = getFirestore(app);
+// Initialize Firebase safely (avoiding crashes if API key is missing at build time)
+const app = (getApps().length === 0 && firebaseConfig.apiKey)
+  ? initializeApp(firebaseConfig)
+  : (getApps().length > 0 ? getApp() : null);
+
+const db = app ? getFirestore(app) : (null as any);
 
 export const initAnalytics = async () => {
-  if (typeof window !== "undefined") {
+  if (typeof window !== "undefined" && app) {
     const supported = await isSupported();
     if (supported) {
       return getAnalytics(app);

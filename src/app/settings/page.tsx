@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Bell, Globe, Moon, Star, RefreshCw } from "lucide-react";
 import { PageTransition } from "@/components/PageTransition";
 import { Switch } from "@/components/ui/switch";
 import { teams } from "@/data/mock";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function SettingsPage() {
   const [darkMode, setDarkMode] = useState(true);
@@ -17,6 +19,30 @@ export default function SettingsPage() {
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [firebaseStatus, setFirebaseStatus] = useState("กำลังตรวจสอบการเชื่อมต่อ...");
+
+  useEffect(() => {
+    const hasKeys = !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+    if (!hasKeys) {
+      setFirebaseStatus("❌ ไม่พบ Firebase API Key (กรุณาเช็ก Environment Variables บน Vercel)");
+      return;
+    }
+
+    async function checkConnection() {
+      try {
+        const snap = await getDocs(collection(db, "matches"));
+        if (snap.size > 0) {
+          setFirebaseStatus("✅ เชื่อมต่อ Firestore สำเร็จ และพบข้อมูลแมตช์!");
+        } else {
+          setFirebaseStatus("⚠️ เชื่อมต่อ Firestore ได้ แต่ไม่พบข้อมูลใน matches");
+        }
+      } catch (err: any) {
+        setFirebaseStatus(`❌ เชื่อมต่อล้มเหลว: ${err.message}`);
+      }
+    }
+    checkConnection();
+  }, []);
+
 
   const handleSync = async () => {
     setSyncing(true);
@@ -50,6 +76,10 @@ export default function SettingsPage() {
               <RefreshCw className={`h-5 w-5 text-neon ${syncing ? "animate-spin" : ""}`} /> Data Synchronization
             </h2>
             <div className="mt-4 space-y-3">
+              <div className="rounded border border-glass-border bg-navy-light/40 p-3">
+                <p className="text-xs font-semibold text-white/70">สถานะการเชื่อมต่อฐานข้อมูล:</p>
+                <p className="mt-1.5 text-xs font-medium text-white/90">{firebaseStatus}</p>
+              </div>
               <p className="text-xs text-white/50">
                 เชื่อมต่อและอัปเดตข้อมูลตารางแข่ง ผลบอล และตารางคะแนนจาก football-data.org มายังฐานข้อมูล Firestore ของคุณโดยตรง
               </p>
