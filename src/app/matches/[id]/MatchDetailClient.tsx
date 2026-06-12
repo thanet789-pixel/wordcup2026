@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Sparkles } from "lucide-react";
 import { PageTransition } from "@/components/PageTransition";
@@ -10,6 +11,9 @@ import { LiveBadge } from "@/components/LiveBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Match, getTeam, aiSummary } from "@/data/mock";
+import { useAuth } from "@/context/AuthContext";
+import { db } from "@/lib/firebase";
+import { doc, setDoc, onSnapshot } from "firebase/firestore";
 
 const momentumData = [10, 25, 15, -10, 30, 20, -5, 40, 15, -20, 10, 35, 20, -15, 25];
 
@@ -17,6 +21,60 @@ export default function MatchDetailClient({ match }: { match: Match }) {
   const home = getTeam(match.homeTeamId)!;
   const away = getTeam(match.awayTeamId)!;
   const stats = match.stats;
+
+  const { user, loginWithGoogle } = useAuth();
+  const [userPrediction, setUserPrediction] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!user || !db) return;
+
+    const predictionId = `${match.id}_${user.uid}`;
+    const unsub = onSnapshot(doc(db, "predictions", predictionId), (docSnap) => {
+      if (docSnap.exists()) {
+        setUserPrediction(docSnap.data().prediction);
+      }
+    });
+
+    return () => unsub();
+  }, [user, match.id]);
+
+  const handlePredict = async (choice: "home" | "draw" | "away") => {
+    if (!user) {
+      alert("กรุณาเข้าสู่ระบบก่อนร่วมทายผลการแข่งขัน");
+      loginWithGoogle();
+      return;
+    }
+
+    if (match.status?.toLowerCase() === "finished") {
+      alert("แมตช์นี้จบการแข่งขันแล้ว ไม่สามารถทายผลได้");
+      return;
+    }
+
+    setSubmitting(true);
+    const predictionId = `${match.id}_${user.uid}`;
+
+    try {
+      await setDoc(
+        doc(db, "predictions", predictionId),
+        {
+          uid: user.uid,
+          displayName: user.displayName || "แฟนบอล",
+          photoURL: user.photoURL || "",
+          matchId: match.id,
+          prediction: choice,
+          status: "pending",
+          points: 0,
+          createdAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+    } catch (err: any) {
+      alert(`เกิดข้อผิดพลาดในการส่งข้อมูล: ${err.message}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <PageTransition>
@@ -50,6 +108,92 @@ export default function MatchDetailClient({ match }: { match: Match }) {
             <h3 className="font-heading text-lg text-white">วิเคราะห์แมตช์โดย AI</h3>
           </div>
           <p className="mt-2 text-sm leading-relaxed text-white/60">{aiSummary}</p>
+        </div>
+
+        {/* Match Predictor Card */}
+        <div className="mt-6 overflow-hidden rounded-card border border-glass-border bg-glass/80 p-5 backdrop-blur-xl">
+          <div className="flex items-center justify-between border-b border-glass-border pb-3">
+            <h3 className="font-heading text-lg text-gold flex items-center gap-2">
+              🏆 ทายผลการแข่งขันสะสมคะแนน
+            </h3>
+            <span className="text-[10px] uppercase tracking-wider text-white/40">
+              ทายถูกรับ 3 คะแนน
+            </span>
+          </div>
+
+          <div className="mt-4">
+            {match.status?.toLowerCase() === "finished" ? (
+              <div className="text-center py-4 bg-navy-light/20 rounded-lg border border-glass-border">
+                <p className="text-sm text-white/50">จบการแข่งขันแล้ว — สิ้นสุดเวลาร่วมทายผล</p>
+                {userPrediction ? (
+                  <div className="mt-3 inline-block rounded-full bg-gold/10 px-4 py-1 text-xs font-semibold text-gold border border-gold/30">
+                    คุณทายผลว่า: {userPrediction === "home" ? home.name : userPrediction === "away" ? away.name : "เสมอ"}
+                  </div>
+                ) : (
+                  <p className="mt-2 text-xs text-white/30">คุณไม่ได้ร่วมทายผลแมตช์นี้</p>
+                )}
+              </div>
+            ) : !user ? (
+              <div className="text-center py-4 bg-navy-light/20 rounded-lg border border-glass-border">
+                <p className="text-sm text-white/60 mb-3">เข้าสู่ระบบเพื่อร่วมทายผลและสะสมคะแนนจัดอันดับแฟนบอลอันดับหนึ่ง!</p>
+                <button
+                  onClick={loginWithGoogle}
+                  className="rounded-lg border border-neon/30 bg-neon/10 px-6 py-2 text-xs font-semibold text-neon transition-all hover:bg-neon hover:text-navy hover:shadow-[0_0_12px_rgba(34,197,94,0.4)]"
+                >
+                  เข้าสู่ระบบเพื่อร่วมสนุก
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-xs text-white/60 text-center">คุณทายว่าทีมใดจะเป็นฝ่ายชนะในแมตช์นี้?</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    disabled={submitting}
+                    onClick={() => handlePredict("home")}
+                    className={`flex flex-col items-center justify-center gap-2 rounded-lg border p-3 transition-all ${
+                      userPrediction === "home"
+                        ? "border-neon bg-neon/10 text-neon shadow-neon"
+                        : "border-glass-border bg-navy-light/10 text-white/80 hover:border-white/20 hover:bg-white/5"
+                    }`}
+                  >
+                    <span className="text-2xl">{home.flag}</span>
+                    <span className="text-xs font-medium truncate w-full text-center">{home.name} ชนะ</span>
+                  </button>
+
+                  <button
+                    disabled={submitting}
+                    onClick={() => handlePredict("draw")}
+                    className={`flex flex-col items-center justify-center gap-2 rounded-lg border p-3 transition-all ${
+                      userPrediction === "draw"
+                        ? "border-gold bg-gold/10 text-gold shadow-gold"
+                        : "border-glass-border bg-navy-light/10 text-white/80 hover:border-white/20 hover:bg-white/5"
+                    }`}
+                  >
+                    <span className="text-2xl">🤝</span>
+                    <span className="text-xs font-medium text-center">เสมอ</span>
+                  </button>
+
+                  <button
+                    disabled={submitting}
+                    onClick={() => handlePredict("away")}
+                    className={`flex flex-col items-center justify-center gap-2 rounded-lg border p-3 transition-all ${
+                      userPrediction === "away"
+                        ? "border-neon bg-neon/10 text-neon shadow-neon"
+                        : "border-glass-border bg-navy-light/10 text-white/80 hover:border-white/20 hover:bg-white/5"
+                    }`}
+                  >
+                    <span className="text-2xl">{away.flag}</span>
+                    <span className="text-xs font-medium truncate w-full text-center">{away.name} ชนะ</span>
+                  </button>
+                </div>
+                {userPrediction && (
+                  <p className="text-[10px] text-center text-neon font-medium animate-pulse">
+                    ✨ บันทึกการทายผลของคุณเรียบร้อยแล้ว (คุณสามารถเปลี่ยนคำตอบได้ก่อนเริ่มการแข่งขัน)
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Tabs */}
