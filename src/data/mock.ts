@@ -85,6 +85,7 @@ export interface NewsItem {
   category: "news" | "video" | "highlight" | "transfer";
   date: string;
   featured?: boolean;
+  link?: string;
 }
 
 export interface CommentaryLine {

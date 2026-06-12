@@ -18,16 +18,23 @@ export function NewsCard({ item, featured = false }: NewsCardProps) {
     transfer: "text-purple-400",
   };
 
+  const isExternal = !!item.link;
+  const linkHref = item.link || "/news";
+  const linkProps = isExternal 
+    ? { href: linkHref, target: "_blank", rel: "noopener noreferrer" } 
+    : { href: linkHref };
+
   if (featured) {
     return (
       <motion.div whileHover={{ scale: 1.01 }} className="group relative overflow-hidden rounded-card">
-        <Link href="/news">
+        <Link {...linkProps}>
           <div className="relative aspect-[16/9]">
             <Image src={item.image} alt={item.title} fill className="object-cover" />
             <div className="absolute inset-0 bg-hero-gradient" />
             <div className="absolute bottom-0 left-0 right-0 p-6">
               <span className={`text-xs font-semibold uppercase ${categoryColors[item.category]}`}>
                 {item.category}
+                {isExternal && <span className="text-white/60 normal-case font-normal ml-2">• ไทยรัฐออนไลน์</span>}
               </span>
               <h2 className="mt-2 font-heading text-2xl leading-tight tracking-wide text-white md:text-3xl">
                 {item.title}
@@ -43,7 +50,7 @@ export function NewsCard({ item, featured = false }: NewsCardProps) {
   return (
     <motion.div whileHover={{ x: 4 }} className="group">
       <Link
-        href="/news"
+        {...linkProps}
         className="flex gap-3 rounded-card border border-glass-border bg-glass p-3 backdrop-blur-xl transition-all hover:border-neon/30"
       >
         <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-lg">
@@ -52,12 +59,13 @@ export function NewsCard({ item, featured = false }: NewsCardProps) {
         <div className="flex flex-1 flex-col justify-center">
           <span className={`text-[10px] font-semibold uppercase ${categoryColors[item.category]}`}>
             {item.category}
+            {isExternal && <span className="text-white/40 normal-case font-normal ml-1.5">• ไทยรัฐออนไลน์</span>}
           </span>
           <h3 className="mt-1 line-clamp-2 text-sm font-medium text-white group-hover:text-neon">
             {item.title}
           </h3>
           <p className="mt-1 text-xs text-white/40">
-            {new Date(item.date).toLocaleDateString("en-US", {
+            {new Date(item.date).toLocaleDateString("th-TH", {
               month: "short",
               day: "numeric",
             })}
