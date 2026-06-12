@@ -8,8 +8,10 @@ import { Trophy } from "lucide-react";
 export default function SplashPage() {
   const router = useRouter();
   const [progress, setProgress] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     const interval = setInterval(() => {
       setProgress((p) => {
         if (p >= 100) {
@@ -30,7 +32,7 @@ export default function SplashPage() {
       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1459865264687-595d652de67e?w=1920&h=1080&fit=crop')] bg-cover bg-center opacity-20" />
 
       {/* Particles */}
-      {Array.from({ length: 20 }).map((_, i) => (
+      {isMounted && Array.from({ length: 20 }).map((_, i) => (
         <motion.div
           key={i}
           className="absolute h-1 w-1 rounded-full bg-gold/40"
