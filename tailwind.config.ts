@@ -32,8 +32,8 @@ const config: Config = {
         card: "16px",
       },
       fontFamily: {
-        heading: ["var(--font-bebas)", "sans-serif"],
-        body: ["var(--font-inter)", "sans-serif"],
+        heading: ["var(--font-kanit)", "sans-serif"],
+        body: ["var(--font-prompt)", "sans-serif"],
       },
       boxShadow: {
         neon: "0 0 20px rgba(0, 212, 255, 0.3)",
