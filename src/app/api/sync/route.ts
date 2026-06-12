@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase";
-import { doc, writeBatch, collection, getDocs } from "firebase/firestore";
+import { doc, writeBatch, collection, getDocs, getDoc, query, where, increment } from "firebase/firestore";
 import { standings as mockStandings } from "@/data/mock";
 
 let isSyncLoopStarted = false;
@@ -98,6 +98,97 @@ async function syncNews() {
   } catch (err: any) {
     console.error("Error syncing news from RSS:", err.message);
     throw err;
+  }
+}
+
+async function scorePredictions() {
+  if (!db) return 0;
+  
+  try {
+    const predictionsRef = collection(db, "predictions");
+    const q = query(predictionsRef, where("status", "==", "pending"));
+    const querySnap = await getDocs(q);
+    
+    if (querySnap.empty) {
+      return 0;
+    }
+    
+    const matchCache: Record<string, { status: string; homeScore: number | null; awayScore: number | null }> = {};
+    let batch = writeBatch(db);
+    let batchCount = 0;
+    let scoredCount = 0;
+    
+    for (const predictionDoc of querySnap.docs) {
+      const predData = predictionDoc.data();
+      const matchId = predData.matchId;
+      const uid = predData.uid;
+      const userChoice = predData.prediction;
+      
+      if (!matchId || !uid || !userChoice) continue;
+      
+      let matchInfo = matchCache[matchId];
+      if (!matchInfo) {
+        const matchRef = doc(db, "matches", matchId);
+        const matchSnap = await getDoc(matchRef);
+        if (matchSnap.exists()) {
+          const matchData = matchSnap.data();
+          matchInfo = {
+            status: (matchData.status || "").toLowerCase(),
+            homeScore: matchData.homeScore !== undefined && matchData.homeScore !== null ? parseInt(matchData.homeScore, 10) : null,
+            awayScore: matchData.awayScore !== undefined && matchData.awayScore !== null ? parseInt(matchData.awayScore, 10) : null,
+          };
+          matchCache[matchId] = matchInfo;
+        }
+      }
+      
+      if (matchInfo && matchInfo.status === "finished") {
+        const { homeScore, awayScore } = matchInfo;
+        if (homeScore !== null && awayScore !== null && !isNaN(homeScore) && !isNaN(awayScore)) {
+          let actualResult: "home" | "draw" | "away";
+          if (homeScore > awayScore) {
+            actualResult = "home";
+          } else if (homeScore < awayScore) {
+            actualResult = "away";
+          } else {
+            actualResult = "draw";
+          }
+          
+          const isCorrect = userChoice === actualResult;
+          const pointsEarned = isCorrect ? 3 : 0;
+          
+          const predRef = doc(db, "predictions", predictionDoc.id);
+          batch.update(predRef, {
+            status: "scored",
+            points: pointsEarned,
+            actualResult,
+            scoredAt: new Date().toISOString()
+          });
+          
+          const userRef = doc(db, "users", uid);
+          batch.update(userRef, {
+            totalPoints: increment(pointsEarned)
+          });
+          
+          batchCount += 2;
+          scoredCount++;
+          
+          if (batchCount >= 400) {
+            await batch.commit();
+            batch = writeBatch(db);
+            batchCount = 0;
+          }
+        }
+      }
+    }
+    
+    if (batchCount > 0) {
+      await batch.commit();
+    }
+    
+    return scoredCount;
+  } catch (err: any) {
+    console.error("Error scoring predictions:", err);
+    return 0;
   }
 }
 
@@ -306,6 +397,16 @@ async function performSync(): Promise<SyncResult> {
 
       await batch.commit();
       matchesUpdated = updatedMatchesCount;
+
+      // Score pending predictions for finished matches
+      try {
+        const scoredCount = await scorePredictions();
+        if (scoredCount > 0) {
+          console.log(`[Sync] Successfully scored ${scoredCount} predictions.`);
+        }
+      } catch (predErr: any) {
+        console.error("Error scoring predictions during sync:", predErr);
+      }
     } catch (err: any) {
       matchError = err.message || String(err);
     }
