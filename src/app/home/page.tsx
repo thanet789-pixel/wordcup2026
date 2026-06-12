@@ -190,12 +190,12 @@ export default function HomePage() {
             </p>
             <div className="mt-4 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
               <div>
-                <div className="flex items-center gap-4">
-                  <Image src={home.flag} alt="" width={48} height={32} className="rounded-sm" />
-                  <span className="font-heading text-3xl text-white md:text-5xl">VS</span>
-                  <Image src={away.flag} alt="" width={48} height={32} className="rounded-sm" />
+                <div className="flex items-center gap-5">
+                  <Image src={home.flag} alt="" width={84} height={56} className="rounded shadow-lg border border-white/20 object-cover" />
+                  <span className="font-heading text-2xl text-white/60 md:text-4xl">VS</span>
+                  <Image src={away.flag} alt="" width={84} height={56} className="rounded shadow-lg border border-white/20 object-cover" />
                 </div>
-                <h1 className="mt-2 font-heading text-4xl tracking-wide text-white md:text-6xl">
+                <h1 className="mt-3 font-heading text-2xl tracking-wide text-white md:text-4xl">
                   {home.name} พบ {away.name}
                 </h1>
                 <p className="mt-2 text-sm text-white/60">
