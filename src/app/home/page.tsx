@@ -311,10 +311,22 @@ export default function HomePage() {
         {/* Standings + Upcoming */}
         <div className="grid gap-6 lg:grid-cols-2">
           <section>
-            <h2 className="mb-4 font-heading text-2xl tracking-wide text-gold">
-              ตารางคะแนนแบ่งกลุ่ม
-            </h2>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-heading text-2xl tracking-wide text-gold">
+                ตารางคะแนนแบ่งกลุ่ม
+              </h2>
+              <Link href="/standings" className="text-sm text-neon hover:underline">
+                ดูทั้งหมด
+              </Link>
+            </div>
             <GroupTable group="กลุ่ม A" rows={standingsState["กลุ่ม A"] || standings["กลุ่ม A"]} />
+            <div className="mt-4">
+              <Link href="/standings">
+                <button className="w-full rounded-lg border border-gold/30 bg-gold/10 py-2.5 text-center text-sm font-medium text-gold backdrop-blur-xl transition-all hover:bg-gold hover:text-navy hover:shadow-[0_0_15px_rgba(218,165,32,0.4)]">
+                  คลิกดูตารางคะแนนทุกกลุ่ม
+                </button>
+              </Link>
+            </div>
           </section>
           <section>
             <h2 className="mb-4 font-heading text-2xl tracking-wide text-white">
