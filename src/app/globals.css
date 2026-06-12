@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-glass-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-navy font-body text-white antialiased;
+    background-image: radial-gradient(
+        ellipse 80% 50% at 50% -20%,
+        rgba(0, 212, 255, 0.08),
+        transparent
+      ),
+      radial-gradient(
+        ellipse 60% 40% at 80% 100%,
+        rgba(248, 193, 74, 0.05),
+        transparent
+      );
+    min-height: 100vh;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply rounded-card border border-glass-border bg-glass backdrop-blur-xl shadow-glass;
+  }
+
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-gold to-yellow-200 bg-clip-text text-transparent;
+  }
+
+  .text-gradient-neon {
+    @apply bg-gradient-to-r from-neon to-cyan-300 bg-clip-text text-transparent;
+  }
+
+  .stadium-lights {
+    background: radial-gradient(
+        ellipse at 20% 0%,
+        rgba(0, 212, 255, 0.12) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        ellipse at 80% 0%,
+        rgba(248, 193, 74, 0.08) 0%,
+        transparent 50%
+      );
+  }
+}
