@@ -9,7 +9,23 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { collection, getDocs, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-const groups = ["ทั้งหมด", "สด", "วันนี้", "กลุ่ม A", "กลุ่ม B", "กลุ่ม C"];
+const groups = [
+  "ทั้งหมด",
+  "สด",
+  "วันนี้",
+  "กลุ่ม A",
+  "กลุ่ม B",
+  "กลุ่ม C",
+  "กลุ่ม D",
+  "กลุ่ม E",
+  "กลุ่ม F",
+  "กลุ่ม G",
+  "กลุ่ม H",
+  "กลุ่ม I",
+  "กลุ่ม J",
+  "กลุ่ม K",
+  "กลุ่ม L",
+];
 
 export default function MatchesPage() {
   const [filter, setFilter] = useState("ทั้งหมด");
