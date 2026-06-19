@@ -141,7 +141,7 @@ export const teams: Team[] = [
   { id: "esp", name: "สเปน", code: "ESP", flag: "https://flagcdn.com/w320/es.png", ranking: 6, continent: "ยุโรป", colors: { primary: "#AA151B", secondary: "#F1BF00" }, overview: "กระทิงดุยังคงรักษามาตรฐานการครองบอลสไตล์ ติกิ-ตากา และการบดขยี้คู่แข่ง" },
   { id: "cpv", name: "เคปเวิร์ด", code: "CPV", flag: "https://flagcdn.com/w320/cv.png", ranking: 65, continent: "แอฟริกา", colors: { primary: "#002A66", secondary: "#C8102E" }, overview: "ฉลามสีน้ำเงินจากแอฟริกาพร้อมสร้างเซอร์ไพรส์ด้วยสไตล์ที่คาดเดายาก" },
   { id: "ksa", name: "ซาอุดีอาระเบีย", code: "KSA", flag: "https://flagcdn.com/w320/sa.png", ranking: 53, continent: "เอเชีย", colors: { primary: "#006C35", secondary: "#FFFFFF" }, overview: "สิงห์ทะเลทรายหวังจะสร้างผลงานระดับประวัติศาสตร์เฉกเช่นการชนะอาร์เจนตินาในปี 2022" },
-  { id: "uru", name: "อุรุกวัย", code: "URU", flag: "https://flagcdn.com/w320/uy.png", ranking: 14, continent: "อเมริกาใต้", colors: { primary: "#0081C6", secondary: "#FFFFFF" }, overview: "จอมโหดที่เปี่ยมไปด้วยจิตวิญญาณนักสู้ ดุดัน และการเพรสซิ่งที่ไร้ความปรานี" },
+  { id: "ury", name: "อุรุกวัย", code: "URY", flag: "https://flagcdn.com/w320/uy.png", ranking: 14, continent: "อเมริกาใต้", colors: { primary: "#0081C6", secondary: "#FFFFFF" }, overview: "จอมโหดที่เปี่ยมไปด้วยจิตวิญญาณนักสู้ ดุดัน และการเพรสซิ่งที่ไร้ความปรานี" },
 
   // Group I
   { id: "fra", name: "ฝรั่งเศส", code: "FRA", flag: "https://flagcdn.com/w320/fr.png", ranking: 2, continent: "ยุโรป", colors: { primary: "#002395", secondary: "#ED2939" }, overview: "ตราไก่อดีตแชมป์โลก 2 สมัยที่มีขุมกำลังเชิงลึกและนักเตะระดับโลกครบทุกตำแหน่ง" },
@@ -478,7 +478,7 @@ export const matches: Match[] = [
   {
     id: "m16",
     homeTeamId: "ksa",
-    awayTeamId: "uru",
+    awayTeamId: "ury",
     homeScore: null,
     awayScore: null,
     date: "2026-06-19T22:00:00Z",
@@ -634,7 +634,7 @@ export const standings: Record<string, StandingRow[]> = {
   ],
   "กลุ่ม H": [
     { teamId: "esp", played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, points: 0, status: "active" },
-    { teamId: "uru", played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, points: 0, status: "active" },
+    { teamId: "ury", played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, points: 0, status: "active" },
     { teamId: "ksa", played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, points: 0, status: "active" },
     { teamId: "cpv", played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, points: 0, status: "active" },
   ],

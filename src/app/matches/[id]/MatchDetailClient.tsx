@@ -18,8 +18,8 @@ import { doc, setDoc, onSnapshot } from "firebase/firestore";
 const momentumData = [10, 25, 15, -10, 30, 20, -5, 40, 15, -20, 10, 35, 20, -15, 25];
 
 export default function MatchDetailClient({ match }: { match: Match }) {
-  const home = getTeam(match.homeTeamId)!;
-  const away = getTeam(match.awayTeamId)!;
+  const home = getTeam(match.homeTeamId) || { id: match.homeTeamId, name: match.homeTeamId.toUpperCase(), flag: "https://flagcdn.com/w320/un.png" };
+  const away = getTeam(match.awayTeamId) || { id: match.awayTeamId, name: match.awayTeamId.toUpperCase(), flag: "https://flagcdn.com/w320/un.png" };
   const stats = match.stats;
 
   const { user, loginWithGoogle } = useAuth();

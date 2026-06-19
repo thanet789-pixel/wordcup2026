@@ -83,7 +83,7 @@ const newMatches = [
   { id: "m13", homeTeamId: "bel", awayTeamId: "egy", homeScore: 2, awayScore: 1, date: "2026-06-19T02:00:00Z", stadium: "ลูเมน ฟิลด์", city: "ซีแอตเทิล", group: "กลุ่ม G", status: "finished", events: [] },
   { id: "m14", homeTeamId: "irn", awayTeamId: "nzl", homeScore: 1, awayScore: 1, date: "2026-06-19T10:00:00Z", stadium: "โซไฟ สเตเดียม", city: "ลอสแอนเจลิส", group: "กลุ่ม G", status: "live", minute: 65, events: [] },
   { id: "m15", homeTeamId: "esp", awayTeamId: "cpv", homeScore: null, awayScore: null, date: "2026-06-19T19:00:00Z", stadium: "เมอร์เซเดส-เบนซ์ สเตเดียม", city: "แอตแลนตา", group: "กลุ่ม H", status: "scheduled", events: [] },
-  { id: "m16", homeTeamId: "ksa", awayTeamId: "uru", homeScore: null, awayScore: null, date: "2026-06-19T22:00:00Z", stadium: "ฮาร์ดร็อก สเตเดียม", city: "ไมอามี", group: "กลุ่ม H", status: "scheduled", events: [] },
+  { id: "m16", homeTeamId: "ksa", awayTeamId: "ury", homeScore: null, awayScore: null, date: "2026-06-19T22:00:00Z", stadium: "ฮาร์ดร็อก สเตเดียม", city: "ไมอามี", group: "กลุ่ม H", status: "scheduled", events: [] },
   
   // Future matches
   { id: "m17", homeTeamId: "fra", awayTeamId: "sen", homeScore: null, awayScore: null, date: "2026-06-20T19:00:00Z", stadium: "เม็ตไลฟ์ สเตเดียม", city: "นิวยอร์ก นิวเจอร์ซีย์", group: "กลุ่ม I", status: "scheduled", events: [] },
@@ -115,7 +115,7 @@ async function seed() {
     "กลุ่ม E": ["ger", "cuw", "civ", "ecu"],
     "กลุ่ม F": ["ned", "jpn", "swe", "tun"],
     "กลุ่ม G": ["bel", "egy", "irn", "nzl"],
-    "กลุ่ม H": ["esp", "cpv", "ksa", "uru"],
+    "กลุ่ม H": ["esp", "cpv", "ksa", "ury"],
     "กลุ่ม I": ["fra", "sen", "irq", "nor"],
     "กลุ่ม J": ["arg", "alg", "aut", "jor"],
     "กลุ่ม K": ["por", "cod", "uzb", "col"],

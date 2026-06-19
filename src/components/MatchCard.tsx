@@ -14,8 +14,8 @@ interface MatchCardProps {
 }
 
 export function MatchCard({ match, index = 0 }: MatchCardProps) {
-  const home = getTeam(match.homeTeamId)!;
-  const away = getTeam(match.awayTeamId)!;
+  const home = getTeam(match.homeTeamId) || { id: match.homeTeamId, name: match.homeTeamId.toUpperCase(), flag: "https://flagcdn.com/w320/un.png" };
+  const away = getTeam(match.awayTeamId) || { id: match.awayTeamId, name: match.awayTeamId.toUpperCase(), flag: "https://flagcdn.com/w320/un.png" };
   const href = match.status?.toLowerCase() === "live" ? `/live/${match.id}` : `/matches/${match.id}`;
 
   return (
