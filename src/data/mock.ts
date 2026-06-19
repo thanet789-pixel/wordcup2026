@@ -672,7 +672,7 @@ export const news: NewsItem[] = [
       "วิเคราะห์ความพร้อมและสถิติต่างๆ ก่อนเกมการแข่งขันนัดเปิดสนามฟุตบอลโลก 2026 ระหว่างเจ้าภาพร่วมเม็กซิโกปะทะทีมเยือนแอฟริกาใต้ ณ สนามเอสตาดิโอ อัซเตกา คืนนี้",
     image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&h=450&fit=crop",
     category: "news",
-    date: "2026-06-11T10:00:00Z",
+    date: "2026-06-19T10:00:00Z",
     featured: true,
   },
   {
@@ -681,7 +681,7 @@ export const news: NewsItem[] = [
     excerpt: "กัปตันทีมพูลิซิชแสดงความมั่นใจอย่างเต็มเปี่ยมก่อนการเผชิญหน้าในลอสแอนเจลิส",
     image: "https://images.unsplash.com/photo-1517927033932-b3d18e61fb3a?w=800&h=450&fit=crop",
     category: "news",
-    date: "2026-06-11T20:00:00Z",
+    date: "2026-06-19T20:00:00Z",
   },
   {
     id: "n3",
@@ -689,7 +689,7 @@ export const news: NewsItem[] = [
     excerpt: "เนย์มาร์ และ วินิซิอุส นำทัพบราซิลเดินทางถึงนิวเจอร์ซีย์เพื่อเตรียมลงเล่นรอบแบ่งกลุ่มที่สนามเม็ตไลฟ์ สเตเดียม",
     image: "https://images.unsplash.com/photo-1551958219-acbc608c6377?w=800&h=450&fit=crop",
     category: "transfer",
-    date: "2026-06-11T18:00:00Z",
+    date: "2026-06-19T18:00:00Z",
   },
   {
     id: "n4",
@@ -697,7 +697,7 @@ export const news: NewsItem[] = [
     excerpt: "สนามฟุตบอลในตำนานที่เม็กซิโก ซิตี้ ได้รับการจารึกชื่อในฐานะสนามแรกของโลกที่เป็นเจ้าภาพจัดการแข่งขัน 3 ทศวรรษ",
     image: "https://images.unsplash.com/photo-1459865264687-595d652de67e?w=800&h=450&fit=crop",
     category: "video",
-    date: "2026-06-11T14:00:00Z",
+    date: "2026-06-19T14:00:00Z",
   }
 ];
 
