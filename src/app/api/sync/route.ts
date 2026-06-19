@@ -274,23 +274,23 @@ async function performSync(): Promise<SyncResult> {
           (m: any) => m.homeTeamId === homeCode && m.awayTeamId === awayCode
         );
 
+        // Map status
+        let status = "scheduled";
+        if (apiMatch.status === "FINISHED") status = "finished";
+        else if (apiMatch.status === "IN_PLAY" || apiMatch.status === "LIVE") status = "live";
+        else if (apiMatch.status === "PAUSED") status = "halftime";
+
+        // Map scores
+        const homeScore =
+          apiMatch.score?.fullTime?.home !== undefined && apiMatch.score?.fullTime?.home !== null
+            ? apiMatch.score.fullTime.home
+            : null;
+        const awayScore =
+          apiMatch.score?.fullTime?.away !== undefined && apiMatch.score?.fullTime?.away !== null
+            ? apiMatch.score.fullTime.away
+            : null;
+
         if (matchDoc) {
-          // Map status
-          let status = "scheduled";
-          if (apiMatch.status === "FINISHED") status = "finished";
-          else if (apiMatch.status === "IN_PLAY" || apiMatch.status === "LIVE") status = "live";
-          else if (apiMatch.status === "PAUSED") status = "halftime";
-
-          // Map scores
-          const homeScore =
-            apiMatch.score?.fullTime?.home !== undefined && apiMatch.score?.fullTime?.home !== null
-              ? apiMatch.score.fullTime.home
-              : null;
-          const awayScore =
-            apiMatch.score?.fullTime?.away !== undefined && apiMatch.score?.fullTime?.away !== null
-              ? apiMatch.score.fullTime.away
-              : null;
-
           const matchRef = doc(db, "matches", matchDoc.id);
           
           const updatedMatch = {
@@ -309,6 +309,37 @@ async function performSync(): Promise<SyncResult> {
           });
           
           finalMatches.push(updatedMatch);
+          updatedMatchesCount++;
+        } else {
+          // CREATE new match document in Firestore
+          const docId = `api_${apiMatch.id}`;
+          const matchRef = doc(db, "matches", docId);
+          
+          let groupMapped = "รอบน็อกเอาต์";
+          if (apiMatch.group) {
+            const groupKey = apiMatch.group.replace("_", " "); // e.g. GROUP A
+            const groupNum = groupKey.split(" ")[1]; // e.g. A
+            if (groupNum) {
+              groupMapped = `กลุ่ม ${groupNum}`;
+            }
+          }
+          
+          const newMatch = {
+            id: docId,
+            homeTeamId: homeCode,
+            awayTeamId: awayCode,
+            homeScore,
+            awayScore,
+            status,
+            date: apiMatch.utcDate,
+            group: groupMapped,
+            stadium: "สนามกีฬาหลัก (World Cup)",
+            city: "สหรัฐฯ/เม็กซิโก/แคนาดา",
+            events: []
+          };
+          
+          batch.set(matchRef, newMatch);
+          finalMatches.push(newMatch);
           updatedMatchesCount++;
         }
       }
