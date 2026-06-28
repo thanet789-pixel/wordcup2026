@@ -54,6 +54,8 @@ export interface Match {
   minute?: number;
   events?: MatchEvent[];
   stats?: MatchStats;
+  stage?: string;
+  winnerTeamId?: string | null;
 }
 
 export interface MatchStats {

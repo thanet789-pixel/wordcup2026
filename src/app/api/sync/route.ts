@@ -264,15 +264,29 @@ async function performSync(): Promise<SyncResult> {
       const finalMatches: any[] = [];
 
       for (const apiMatch of apiMatches) {
-        if (!apiMatch.homeTeam?.tla || !apiMatch.awayTeam?.tla) continue;
+        const docId = `api_${apiMatch.id}`;
 
-        const homeCode = apiMatch.homeTeam.tla.toLowerCase();
-        const awayCode = apiMatch.awayTeam.tla.toLowerCase();
+        // Find match in Firestore: first by API ID, then by team combination (for legacy seeded matches)
+        let matchDoc = firestoreMatches.find((m: any) => m.id === docId);
+        if (!matchDoc && apiMatch.homeTeam?.tla && apiMatch.awayTeam?.tla) {
+          const homeCode = apiMatch.homeTeam.tla.toLowerCase();
+          const awayCode = apiMatch.awayTeam.tla.toLowerCase();
+          matchDoc = firestoreMatches.find(
+            (m: any) => m.homeTeamId === homeCode && m.awayTeamId === awayCode
+          );
+        }
 
-        // Find match in Firestore
-        const matchDoc = firestoreMatches.find(
-          (m: any) => m.homeTeamId === homeCode && m.awayTeamId === awayCode
-        );
+        const homeTeamId = apiMatch.homeTeam?.tla ? apiMatch.homeTeam.tla.toLowerCase() : "tbd";
+        const awayTeamId = apiMatch.awayTeam?.tla ? apiMatch.awayTeam.tla.toLowerCase() : "tbd";
+        const stage = apiMatch.stage || "GROUP_STAGE";
+
+        // Determine winnerTeamId
+        let winnerTeamId: string | null = null;
+        if (apiMatch.score?.winner === "HOME_TEAM" && apiMatch.homeTeam?.tla) {
+          winnerTeamId = apiMatch.homeTeam.tla.toLowerCase();
+        } else if (apiMatch.score?.winner === "AWAY_TEAM" && apiMatch.awayTeam?.tla) {
+          winnerTeamId = apiMatch.awayTeam.tla.toLowerCase();
+        }
 
         // Map status
         let status = "scheduled";
@@ -295,24 +309,31 @@ async function performSync(): Promise<SyncResult> {
           
           const updatedMatch = {
             ...matchDoc,
+            homeTeamId,
+            awayTeamId,
             homeScore,
             awayScore,
             status,
             date: apiMatch.utcDate,
+            stage,
+            winnerTeamId,
           };
           
           batch.update(matchRef, {
+            homeTeamId,
+            awayTeamId,
             homeScore,
             awayScore,
             status,
             date: apiMatch.utcDate,
+            stage,
+            winnerTeamId,
           });
           
           finalMatches.push(updatedMatch);
           updatedMatchesCount++;
         } else {
           // CREATE new match document in Firestore
-          const docId = `api_${apiMatch.id}`;
           const matchRef = doc(db, "matches", docId);
           
           let groupMapped = "รอบน็อกเอาต์";
@@ -326,8 +347,8 @@ async function performSync(): Promise<SyncResult> {
           
           const newMatch = {
             id: docId,
-            homeTeamId: homeCode,
-            awayTeamId: awayCode,
+            homeTeamId,
+            awayTeamId,
             homeScore,
             awayScore,
             status,
@@ -335,7 +356,9 @@ async function performSync(): Promise<SyncResult> {
             group: groupMapped,
             stadium: "สนามกีฬาหลัก (World Cup)",
             city: "สหรัฐฯ/เม็กซิโก/แคนาดา",
-            events: []
+            events: [],
+            stage,
+            winnerTeamId,
           };
           
           batch.set(matchRef, newMatch);

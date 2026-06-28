@@ -13,6 +13,7 @@ const groups = [
   "ทั้งหมด",
   "สด",
   "วันนี้",
+  "รอบน็อกเอาต์",
   "กลุ่ม A",
   "กลุ่ม B",
   "กลุ่ม C",
@@ -61,6 +62,9 @@ export default function MatchesPage() {
     if (filter === "วันนี้") {
       if (!todayDate) return false;
       return isSameDayBangkok(m.date, todayDate);
+    }
+    if (filter === "รอบน็อกเอาต์") {
+      return m.group === "รอบน็อกเอาต์" || (m.stage && m.stage !== "GROUP_STAGE");
     }
     return m.group === filter;
   });
