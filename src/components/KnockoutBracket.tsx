@@ -14,14 +14,14 @@ interface KnockoutBracketProps {
 
 const BRACKET_PARENTS: Record<string, { home: string; away: string }> = {
   // Round of 16 (LAST_16)
-  "api_537376": { home: "api_537417", away: "api_537423" },
-  "api_537375": { home: "api_537415", away: "api_537418" },
-  "api_537377": { home: "api_537424", away: "api_537416" },
+  "api_537375": { home: "api_537415", away: "api_537416" },
+  "api_537376": { home: "api_537417", away: "api_537418" },
+  "api_537377": { home: "api_537423", away: "api_537424" },
   "api_537378": { home: "api_537425", away: "api_537426" },
-  "api_537379": { home: "api_537422", away: "api_537421" },
-  "api_537380": { home: "api_537420", away: "api_537419" },
-  "api_537381": { home: "api_537429", away: "api_537428" },
-  "api_537382": { home: "api_537427", away: "api_537430" },
+  "api_537379": { home: "api_537421", away: "api_537422" },
+  "api_537380": { home: "api_537419", away: "api_537420" },
+  "api_537381": { home: "api_537427", away: "api_537428" },
+  "api_537382": { home: "api_537429", away: "api_537430" },
 
   // Quarterfinals (QUARTER_FINALS)
   "api_537383": { home: "api_537376", away: "api_537375" },
@@ -338,11 +338,11 @@ export function KnockoutBracket({ matches }: KnockoutBracketProps) {
             {/* COLUMN 1: LEFT ROUND OF 32 */}
             <div className="flex flex-col justify-around h-[840px]">
               {renderMatchNode("api_537417", "left")}
-              {renderMatchNode("api_537423", "left")}
-              {renderMatchNode("api_537415", "left")}
               {renderMatchNode("api_537418", "left")}
-              {renderMatchNode("api_537424", "left")}
+              {renderMatchNode("api_537415", "left")}
               {renderMatchNode("api_537416", "left")}
+              {renderMatchNode("api_537423", "left")}
+              {renderMatchNode("api_537424", "left")}
               {renderMatchNode("api_537425", "left")}
               {renderMatchNode("api_537426", "left")}
             </div>
@@ -417,13 +417,13 @@ export function KnockoutBracket({ matches }: KnockoutBracketProps) {
 
             {/* COLUMN 9: RIGHT ROUND OF 32 */}
             <div className="flex flex-col justify-around h-[840px]">
-              {renderMatchNode("api_537422", "right")}
               {renderMatchNode("api_537421", "right")}
-              {renderMatchNode("api_537420", "right")}
+              {renderMatchNode("api_537422", "right")}
               {renderMatchNode("api_537419", "right")}
-              {renderMatchNode("api_537429", "right")}
-              {renderMatchNode("api_537428", "right")}
+              {renderMatchNode("api_537420", "right")}
               {renderMatchNode("api_537427", "right")}
+              {renderMatchNode("api_537428", "right")}
+              {renderMatchNode("api_537429", "right")}
               {renderMatchNode("api_537430", "right")}
             </div>
 
